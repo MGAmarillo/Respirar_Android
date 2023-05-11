@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id = "@+id/itemRegistro"
+        android:title="@string/registrarse">
+    </item>
+
+    <item
+        android:id = "@+id/itemBuscador"
+        android:title="Buscar">
+    </item>
+
+</menu>
