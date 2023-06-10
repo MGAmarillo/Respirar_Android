@@ -13,10 +13,13 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 class MapFragment : Fragment() {
+
+    private val mapPoints: MutableList<GeoPoint> = mutableListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,12 +41,22 @@ class MapFragment : Fragment() {
         map.setMultiTouchControls(true)
 
         val mapController = map.controller
-        mapController.setZoom(5)
+        mapController.setZoom(4)
 
         val startPoint = GeoPoint(-34.0000000, -64.0000000)
+        addMapPoint(map, startPoint)
         mapController.setCenter(startPoint)
 
         return view
     }
+
+    private fun addMapPoint(map: MapView, geoPoint: GeoPoint) {
+        mapPoints.add(geoPoint)
+        val marker = Marker(map)
+        marker.position = geoPoint
+        map.overlays.add(marker)
+        map.invalidate()
+    }
+
 
 }

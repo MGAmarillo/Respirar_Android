@@ -5,9 +5,4 @@
         android:title="@string/registrarse">
     </item>
 
-    <item
-        android:id = "@+id/itemBuscador"
-        android:title="Buscar">
-    </item>
-
 </menu>
