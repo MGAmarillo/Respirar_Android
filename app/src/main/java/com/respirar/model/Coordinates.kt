@@ -1,6 +1,6 @@
 package com.respirar.model
 
-class Coordinates(latitude: Float, longitude: Float) {
+class Coordinates(latitude: Double, longitude: Double) {
     val latitude = latitude
     val longitude = longitude
 }

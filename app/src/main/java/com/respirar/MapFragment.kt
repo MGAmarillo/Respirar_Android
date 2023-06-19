@@ -6,7 +6,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import com.google.android.material.navigation.NavigationView
 import com.respirar.model.Station
 import com.respirar.service.StationService
 import com.respirar.service.StationServiceApiBuilder
@@ -22,7 +26,9 @@ import retrofit2.Response
 class MapFragment : Fragment() {
 
     private val mapPoints: MutableList<GeoPoint> = mutableListOf()
+    private val allStations : MutableList<Station> = mutableListOf()
     private lateinit var stationService: StationService
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,16 +52,19 @@ class MapFragment : Fragment() {
         val mapController = map.controller
         mapController.setZoom(4)
         stationService = StationServiceApiBuilder.create()
-        getStations()
+
+        getStations(map, view)
+
 
         val startPoint = GeoPoint(-34.0000000, -64.0000000)
-        addMapPoint(map, startPoint)
-        mapController.setCenter(startPoint)
 
+        map.setClickable(true)
+        map.setMultiTouchControls(true)
+        mapController.setCenter(startPoint)
         return view
     }
 
-    private fun getStations() {
+    private fun getStations(map:MapView, view: View) {
         stationService.getStations().enqueue(object :
             Callback<List<Station>> {
             override fun onResponse(call: Call<List<Station>>, response: Response<List<Station>>) {
@@ -63,13 +72,73 @@ class MapFragment : Fragment() {
                     val stations = response.body()
                     Log.d("stations",stations.toString())
                     // iterar la respuesta e ir creando los markers
+                    if (stations != null) {
+                        stations.forEach(){station ->
+                                allStations.add(station)
+                            }
+                            // Llamar a una función para agregar los marcadores al mapa
+                            addMarkersToMap(map,view)
+
+                    }
+                    }
+
                 }
-            }
 
             override fun onFailure(call: Call<List<Station>>, t: Throwable) {
                 Log.e("Example", t.stackTraceToString())
             }
         })
+    }
+
+    private fun addMarkersToMap(map: MapView, view: View) {
+        allStations.forEach { station ->
+            val coordinates = station.coordinates
+            val geoPoint = GeoPoint(coordinates.latitude, coordinates.longitude)
+            val marker = Marker(map)
+            marker.position = geoPoint
+            addMapPoint(map, geoPoint)
+            marker.setInfoWindow(null)
+            map.overlays.add(marker)
+            marker.setOnMarkerClickListener { marker, mapView ->
+                // Obtener los datos de la estación asociada al marcador
+                val station = getStationFromMarker(marker)
+                if (station != null) {
+                    // Hacer algo con los datos de la estación (por ejemplo, mostrarlos en un diálogo)
+                    showDialogWithStationData(map,marker,view,station)
+                }
+                true // Devolver `true` para indicar que el evento de toque ha sido gestionado
+            }
+        }
+        map.invalidate()
+
+    }
+
+    private fun getStationFromMarker(marker: Marker): Station? {
+        // Iterar sobre `allStations` y buscar la estación que coincide con el marcador
+        return allStations.find { station ->
+            station.coordinates.latitude == marker.position.latitude &&
+                    station.coordinates.longitude == marker.position.longitude
+        }
+    }
+
+    private fun showDialogWithStationData(map:MapView, marker:Marker, view:View, station: Station) {
+       val mapController = map.controller
+       mapController.setCenter(marker.position)
+       mapController.setZoom(15)
+       val name: TextView = view.findViewById(R.id.nombreEstación)
+       val temperatura: TextView = view.findViewById(R.id.estadoTemperatura)
+       val fiabilidad: TextView = view.findViewById(R.id.estadoFiabilidad)
+       val pm1: TextView = view.findViewById(R.id.estadoPM1)
+       val pm10: TextView = view.findViewById(R.id.estadoPM10)
+       val pm25: TextView = view.findViewById(R.id.estadoPM25)
+       name.text = station.name.toString()
+       temperatura.text = station.temperature.toString()+("°")
+       fiabilidad.text = station.reliability.toString()
+       pm1.text = station.pm1.toString()
+       pm10.text = station.pm10.toString()
+       pm25.text = station.pm25.toString()
+       val drawerLayout: DrawerLayout = view.findViewById(R.id.drawerLayoutMapFragment)
+       drawerLayout.openDrawer(GravityCompat.END)
     }
 
     private fun addMapPoint(map: MapView, geoPoint: GeoPoint) {
