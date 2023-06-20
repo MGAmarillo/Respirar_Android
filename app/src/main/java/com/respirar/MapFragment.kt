@@ -11,7 +11,10 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.google.android.material.navigation.NavigationView
+import com.respirar.model.LoginCredentials
+import com.respirar.model.LoginResponse
 import com.respirar.model.Station
+import com.respirar.model.StationHistory
 import com.respirar.service.StationService
 import com.respirar.service.StationServiceApiBuilder
 import org.osmdroid.config.Configuration
@@ -55,6 +58,9 @@ class MapFragment : Fragment() {
 
         getStations(map, view)
 
+        //hardocdeado para probar
+        getStationHistory("station-1", "2023-06-16", "2023-06-19", "SO2")
+        login("user@respirar.com", "user1234")
 
         val startPoint = GeoPoint(-34.0000000, -64.0000000)
 
@@ -150,4 +156,41 @@ class MapFragment : Fragment() {
     }
 
 
+    // OBTENER HISTORIA
+    private fun getStationHistory(stationId: String, fromDate: String, toDate: String, parameter: String) {
+        stationService.getStationHistory(stationId, fromDate, toDate, parameter).enqueue(object :
+            Callback<StationHistory> {
+            override fun onResponse(call: Call<StationHistory>, response: Response<StationHistory>) {
+                if (response.isSuccessful) {
+                    val stations = response.body()
+                    //armar gráfico con la data
+                    Log.d("stationsHistory",stations.toString())
+                }
+
+            }
+
+            override fun onFailure(call: Call<StationHistory>, t: Throwable) {
+                Log.e("Example", t.stackTraceToString())
+            }
+        })
+    }
+
+    private fun login(userId: String, password: String) {
+        val loginCredentials = LoginCredentials(userId, password)
+        stationService.login(loginCredentials).enqueue(object :
+            Callback<LoginResponse> {
+            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                if (response.isSuccessful) {
+                    val stations = response.body()
+                    //guardar el token de alguna forma
+                    Log.d("stationsHistory",stations.toString())
+                }
+
+            }
+
+            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                Log.e("Example", t.stackTraceToString())
+            }
+        })
+    }
 }
