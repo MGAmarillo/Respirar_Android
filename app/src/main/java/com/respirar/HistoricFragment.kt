@@ -6,7 +6,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.Spinner
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import com.jjoe64.graphview.GraphView
@@ -26,6 +30,8 @@ class HistoricFragment : Fragment() {
     private lateinit var graphView: GraphView
     private lateinit var stationService: StationService
     lateinit var btnGoBack: Button
+    lateinit var btnUpdateHistory: Button
+    lateinit var spinner: Spinner
 
 
     override fun onCreateView(
@@ -38,8 +44,34 @@ class HistoricFragment : Fragment() {
 
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
 
-        btnGoBack = view.findViewById(R.id.volver)
+        btnGoBack = view.findViewById(R.id.idVolver)
+        btnUpdateHistory = view.findViewById(R.id.idActualizar)
 
+
+        spinner = view.findViewById(R.id.idParameterSpinner)
+        val parametros = resources.getStringArray(R.array.opciones_parametros)
+        if (spinner != null) {
+            val adapter = context?.let {
+                ArrayAdapter(
+                    it,
+                    android.R.layout.simple_spinner_item, parametros
+                )
+            }
+            spinner.adapter = adapter
+        }
+
+        spinner.onItemSelectedListener = object :
+            AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>,
+                                        view: View, position: Int, id: Long) {
+                Toast.makeText(this@HistoricFragment.context,
+                             parametros[position], Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // write code to perform some action
+            }
+        }
 
         stationService = StationServiceApiBuilder.create()
         getStationHistory("station-1", "2023-06-16", "2023-06-20", "SO2")
@@ -55,6 +87,12 @@ class HistoricFragment : Fragment() {
 
             val goBack = HistoricFragmentDirections.actionHistoricFragmentToMapFragment2()
             view?.findNavController()?.navigate(goBack)
+
+        }
+
+        btnUpdateHistory.setOnClickListener {
+
+            getStationHistory("station-1", "2023-06-16", "2023-06-20",  spinner.selectedItem.toString())
 
         }
     }

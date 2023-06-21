@@ -4,4 +4,12 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="busc_tu_estaci_n">Buscá tu estación</string>
+    <string-array name="opciones_parametros">
+        <item>temperature</item>
+        <item>CO</item>
+        <item>SO2</item>
+        <item>PM1</item>
+        <item>PM10</item>
+        <item>PM25</item>
+    </string-array>
 </resources>
