@@ -38,6 +38,7 @@ class MapFragment : Fragment() {
     private val mapPoints: MutableList<GeoPoint> = mutableListOf()
     private val allStations : MutableList<Station> = mutableListOf()
     private lateinit var stationService: StationService
+    private lateinit var currentStationId : String
 //    private lateinit var graphView: GraphView
     lateinit var btnGoToHistoric: Button
 
@@ -86,7 +87,7 @@ class MapFragment : Fragment() {
 
         btnGoToHistoric.setOnClickListener {
 
-            val actionToHistoric = MapFragmentDirections.actionMapFragmentToHistoricFragment3()
+            val actionToHistoric = MapFragmentDirections.actionMapFragmentToHistoricFragment3(currentStationId)
             view?.findNavController()?.navigate(actionToHistoric)
 
         }
@@ -150,6 +151,7 @@ class MapFragment : Fragment() {
     }
 
     private fun showDialogWithStationData(map:MapView, marker:Marker, view:View, station: Station) {
+        currentStationId = station.id
        val mapController = map.controller
        mapController.setCenter(marker.position)
        mapController.setZoom(15)

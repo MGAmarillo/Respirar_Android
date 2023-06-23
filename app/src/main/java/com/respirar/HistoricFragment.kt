@@ -1,5 +1,8 @@
 package com.respirar
 
+import android.app.DatePickerDialog
+import android.app.DatePickerDialog.OnDateSetListener
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
@@ -9,11 +12,14 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import com.respirar.model.StationHistory
@@ -24,6 +30,11 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+
+private const val INPUT_DATE_PATTERN = "yyyy-MM-dd"
 
 class HistoricFragment : Fragment() {
 
@@ -32,6 +43,10 @@ class HistoricFragment : Fragment() {
     lateinit var btnGoBack: Button
     lateinit var btnUpdateHistory: Button
     lateinit var spinner: Spinner
+    lateinit var calendar: Calendar
+    lateinit var dateFromTextInput: EditText
+    lateinit var dateToTextInput: EditText
+    lateinit var currentStationId: String
 
 
     override fun onCreateView(
@@ -40,9 +55,51 @@ class HistoricFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_historic, container, false)
 
-        val ctx = getActivity()?.getApplicationContext()
+        val ctx = activity?.applicationContext
 
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
+
+        calendar = Calendar.getInstance()
+
+        dateToTextInput = view.findViewById(R.id.DateTo)
+        dateFromTextInput = view.findViewById(R.id.DateFrom)
+
+        val dateToDate =
+            OnDateSetListener { view, year, month, day ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, day)
+                updateLabel(dateToTextInput)
+            }
+
+        dateToTextInput.setOnClickListener {
+            this@HistoricFragment.context?.let { it1 ->
+                DatePickerDialog(
+                    it1, dateToDate, calendar.get(
+                        Calendar.YEAR
+                    ), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)
+                ).show()
+            }
+        }
+
+        val dateFromDate =
+            OnDateSetListener { view, year, month, day ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, day)
+                updateLabel(dateFromTextInput)
+            }
+
+        dateFromTextInput.setOnClickListener {
+            this@HistoricFragment.context?.let { it1 ->
+                DatePickerDialog(
+                    it1, dateFromDate, calendar.get(
+                        Calendar.YEAR
+                    ), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)
+                ).show()
+            }
+        }
+
 
         btnGoBack = view.findViewById(R.id.idVolver)
         btnUpdateHistory = view.findViewById(R.id.idActualizar)
@@ -69,32 +126,38 @@ class HistoricFragment : Fragment() {
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
-                // write code to perform some action
             }
         }
 
         stationService = StationServiceApiBuilder.create()
-        getStationHistory("station-1", "2023-06-16", "2023-06-20", "SO2")
+
+        currentStationId = HistoricFragmentArgs.fromBundle(requireArguments()).stationId
+
+        val formatter = DateTimeFormatter.ofPattern(INPUT_DATE_PATTERN)
+        val current = LocalDateTime.now().format(formatter)
+        getStationHistory(currentStationId, current, current, "SO2")
+
         return view
     }
 
     override fun onStart() {
         super.onStart()
 
-        requireActivity().title = "Prueba"
 
         btnGoBack.setOnClickListener {
-
             val goBack = HistoricFragmentDirections.actionHistoricFragmentToMapFragment2()
             view?.findNavController()?.navigate(goBack)
-
         }
 
         btnUpdateHistory.setOnClickListener {
-
-            getStationHistory("station-1", "2023-06-16", "2023-06-20",  spinner.selectedItem.toString())
-
+            graphView.removeAllSeries()
+            getStationHistory(currentStationId,  dateFromTextInput.text.toString(), dateToTextInput.text.toString(),  spinner.selectedItem.toString())
         }
+    }
+
+    private fun updateLabel(textToUpdate: TextView) {
+        val formatter = SimpleDateFormat(INPUT_DATE_PATTERN)
+        textToUpdate.text = formatter.format(calendar.time);
     }
 
     // OBTENER HISTORIA
@@ -104,8 +167,6 @@ class HistoricFragment : Fragment() {
             override fun onResponse(call: Call<StationHistory>, response: Response<StationHistory>) {
                 if (response.isSuccessful) {
                     val history = response.body()
-                    //armar gráfico con la data
-                    Log.d("stationsHistory",history.toString())
                     val datapointList = ArrayList<DataPoint>()
 
                     history?.values?.forEach() {value ->
@@ -117,20 +178,17 @@ class HistoricFragment : Fragment() {
                     }
 
                     graphView = view?.findViewById(R.id.idGraphView)!!
-                    val series = LineGraphSeries(
-                        datapointList.toTypedArray()
-                    )
+                    if(history?.values?.size!! < 3) {
+                        graphView.gridLabelRenderer.labelFormatter = DateAsXAxisLabelFormatter(this@HistoricFragment.activity, SimpleDateFormat("dd-M-yyyy hh:mm"))
+                    } else if (fromDate == toDate) {
+                        graphView.gridLabelRenderer.labelFormatter = DateAsXAxisLabelFormatter(this@HistoricFragment.activity, SimpleDateFormat("hh:mm"))
+                    } else {
+                        graphView.gridLabelRenderer.labelFormatter = DateAsXAxisLabelFormatter(this@HistoricFragment.activity, SimpleDateFormat("dd-MM-yyyy"))
+                    }
 
-                    graphView.title = "My Graph View";
-
-
-                    // on below line we are setting
-                    // our title text size.
                     graphView.titleTextSize = 18F;
 
-                    // on below line we are adding
-                    // data series to our graph view.
-                    graphView.addSeries(series);
+                    graphView.addSeries(LineGraphSeries(datapointList.toTypedArray()));
                 }
 
             }

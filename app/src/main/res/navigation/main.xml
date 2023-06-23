@@ -13,6 +13,7 @@
         <action
             android:id="@+id/action_mapFragment_to_historicFragment3"
             app:destination="@id/historicFragment" />
+
     </fragment>
 
 
@@ -24,6 +25,9 @@
         <action
             android:id="@+id/action_historicFragment_to_mapFragment2"
             app:destination="@id/mapFragment" />
+        <argument
+            android:name="stationId"
+            app:argType="string" />
     </fragment>
 
 </navigation>

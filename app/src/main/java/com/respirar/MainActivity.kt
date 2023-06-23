@@ -48,8 +48,6 @@ class MainActivity : AppCompatActivity() {
 
         buttonMenu.setOnClickListener(){
             drawerLayout.openDrawer(GravityCompat.START);
-
-
         }
 
     }
