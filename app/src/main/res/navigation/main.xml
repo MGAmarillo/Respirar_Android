@@ -9,5 +9,25 @@
         android:id="@+id/mapFragment"
         android:name="com.respirar.MapFragment"
         android:label="fragment_map"
-        tools:layout="@layout/fragment_map" />
+        tools:layout="@layout/fragment_map" >
+        <action
+            android:id="@+id/action_mapFragment_to_historicFragment3"
+            app:destination="@id/historicFragment" />
+
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/historicFragment"
+        android:name="com.respirar.HistoricFragment"
+        android:label="fragment_historic"
+        tools:layout="@layout/fragment_historic" >
+        <action
+            android:id="@+id/action_historicFragment_to_mapFragment2"
+            app:destination="@id/mapFragment" />
+        <argument
+            android:name="stationId"
+            app:argType="string" />
+    </fragment>
+
 </navigation>

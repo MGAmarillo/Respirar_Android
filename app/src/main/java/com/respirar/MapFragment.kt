@@ -6,11 +6,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import com.google.android.material.navigation.NavigationView
+import androidx.navigation.findNavController
+import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.series.DataPoint
+import com.jjoe64.graphview.series.LineGraphSeries
 import com.respirar.model.LoginCredentials
 import com.respirar.model.LoginResponse
 import com.respirar.model.Station
@@ -25,13 +29,18 @@ import org.osmdroid.views.overlay.Marker
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+
 
 class MapFragment : Fragment() {
 
     private val mapPoints: MutableList<GeoPoint> = mutableListOf()
     private val allStations : MutableList<Station> = mutableListOf()
     private lateinit var stationService: StationService
-
+    private lateinit var currentStationId : String
+//    private lateinit var graphView: GraphView
+    lateinit var btnGoToHistoric: Button
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,6 +53,8 @@ class MapFragment : Fragment() {
         val ctx = getActivity()?.getApplicationContext();
 
         Configuration.getInstance().load(ctx,PreferenceManager.getDefaultSharedPreferences(ctx))
+
+        btnGoToHistoric = view.findViewById(R.id.datosHistoricos)
 
         val map = view.findViewById<MapView>(R.id.map)
 
@@ -59,7 +70,6 @@ class MapFragment : Fragment() {
         getStations(map, view)
 
         //hardocdeado para probar
-        getStationHistory("station-1", "2023-06-16", "2023-06-19", "SO2")
         login("user@respirar.com", "user1234")
 
         val startPoint = GeoPoint(-34.0000000, -64.0000000)
@@ -68,6 +78,19 @@ class MapFragment : Fragment() {
         map.setMultiTouchControls(true)
         mapController.setCenter(startPoint)
         return view
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        requireActivity().title = "Prueba"
+
+        btnGoToHistoric.setOnClickListener {
+
+            val actionToHistoric = MapFragmentDirections.actionMapFragmentToHistoricFragment3(currentStationId)
+            view?.findNavController()?.navigate(actionToHistoric)
+
+        }
     }
 
     private fun getStations(map:MapView, view: View) {
@@ -128,6 +151,7 @@ class MapFragment : Fragment() {
     }
 
     private fun showDialogWithStationData(map:MapView, marker:Marker, view:View, station: Station) {
+        currentStationId = station.id
        val mapController = map.controller
        mapController.setCenter(marker.position)
        mapController.setZoom(15)
@@ -157,23 +181,48 @@ class MapFragment : Fragment() {
 
 
     // OBTENER HISTORIA
-    private fun getStationHistory(stationId: String, fromDate: String, toDate: String, parameter: String) {
-        stationService.getStationHistory(stationId, fromDate, toDate, parameter).enqueue(object :
-            Callback<StationHistory> {
-            override fun onResponse(call: Call<StationHistory>, response: Response<StationHistory>) {
-                if (response.isSuccessful) {
-                    val stations = response.body()
-                    //armar gráfico con la data
-                    Log.d("stationsHistory",stations.toString())
-                }
-
-            }
-
-            override fun onFailure(call: Call<StationHistory>, t: Throwable) {
-                Log.e("Example", t.stackTraceToString())
-            }
-        })
-    }
+//    private fun getStationHistory(stationId: String, fromDate: String, toDate: String, parameter: String) {
+//        stationService.getStationHistory(stationId, fromDate, toDate, parameter).enqueue(object :
+//            Callback<StationHistory> {
+//            override fun onResponse(call: Call<StationHistory>, response: Response<StationHistory>) {
+//                if (response.isSuccessful) {
+//                    val history = response.body()
+//                    //armar gráfico con la data
+//                    Log.d("stationsHistory",history.toString())
+//                    val datapointList = ArrayList<DataPoint>()
+//
+//                    history?.values?.forEach() {value ->
+//                        Log.d("value",value.toString())
+//                        val formatter = SimpleDateFormat("yyyy-MM-dd")
+//                        val text = value.date
+//                        val date = formatter.parse(text)
+//                        datapointList.add(DataPoint(date, value.value.toDouble()))
+//                    }
+//
+//                    graphView = view?.findViewById(R.id.idGraphView)!!
+//                    val series = LineGraphSeries(
+//                        datapointList.toTypedArray()
+//                    )
+//
+//                    graphView.title = "My Graph View";
+//
+//
+//                    // on below line we are setting
+//                    // our title text size.
+//                    graphView.titleTextSize = 18F;
+//
+//                    // on below line we are adding
+//                    // data series to our graph view.
+//                    graphView.addSeries(series);
+//                }
+//
+//            }
+//
+//            override fun onFailure(call: Call<StationHistory>, t: Throwable) {
+//                Log.e("Example", t.stackTraceToString())
+//            }
+//        })
+//    }
 
     private fun login(userId: String, password: String) {
         val loginCredentials = LoginCredentials(userId, password)
