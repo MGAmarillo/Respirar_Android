@@ -14,7 +14,7 @@ object StationServiceApiBuilder {
     }.build()
 
 
-    private val BASE_URL = "http://192.168.1.4:3001/"
+    private val BASE_URL = "http://192.168.1.4:3031/"
                             //10.0.2.2
 
     private val retrofit = Retrofit.Builder()

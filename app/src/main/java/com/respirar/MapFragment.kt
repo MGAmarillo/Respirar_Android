@@ -7,18 +7,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
-import com.jjoe64.graphview.GraphView
-import com.jjoe64.graphview.series.DataPoint
-import com.jjoe64.graphview.series.LineGraphSeries
-import com.respirar.model.LoginCredentials
-import com.respirar.model.LoginResponse
 import com.respirar.model.Station
-import com.respirar.model.StationHistory
 import com.respirar.service.StationService
 import com.respirar.service.StationServiceApiBuilder
 import org.osmdroid.config.Configuration
@@ -29,9 +25,6 @@ import org.osmdroid.views.overlay.Marker
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-
 
 class MapFragment : Fragment() {
 
@@ -40,6 +33,8 @@ class MapFragment : Fragment() {
     private lateinit var stationService: StationService
     private lateinit var currentStationId : String
     lateinit var btnGoToHistoric: Button
+    lateinit var searchView: SearchView
+    lateinit var resultsView: LinearLayout
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,6 +49,7 @@ class MapFragment : Fragment() {
         Configuration.getInstance().load(ctx,PreferenceManager.getDefaultSharedPreferences(ctx))
 
         btnGoToHistoric = view.findViewById(R.id.datosHistoricos)
+
 
         val map = view.findViewById<MapView>(R.id.map)
 
@@ -76,6 +72,51 @@ class MapFragment : Fragment() {
         map.setClickable(true)
         map.setMultiTouchControls(true)
         mapController.setCenter(startPoint)
+
+        searchView =  view.findViewById(R.id.search)
+        resultsView = view.findViewById(R.id.idResultsView)
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                callSearch(query)
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                callSearch(newText)
+                return true
+            }
+
+            fun callSearch(query: String?) {
+                resultsView.removeAllViews()
+                if(!query.isNullOrBlank()) {
+                    val filteredStations = allStations.filter { station ->
+                        station.name.toLowerCase().contains(query!!.toLowerCase())
+                    }
+                    filteredStations.forEach { station ->
+                        val button = Button(context)
+                        button.text = station.name
+                        button.setOnClickListener {
+                            mapController.setZoom(15)
+                            mapController.setCenter( GeoPoint(station.coordinates.latitude, station.coordinates.longitude))
+                            searchView.clearFocus()
+
+                        }
+                        resultsView.addView(button)
+
+                    }
+                }
+            }
+        })
+
+        searchView.setOnCloseListener(object : SearchView.OnCloseListener {
+            override fun onClose(): Boolean {
+                resultsView.removeAllViews()
+                searchView.clearFocus()
+                return true
+            }
+        })
+
         return view
     }
 
