@@ -6,11 +6,14 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import com.google.android.material.navigation.NavigationView
+import androidx.navigation.findNavController
 import com.respirar.model.Station
 import com.respirar.service.StationService
 import com.respirar.service.StationServiceApiBuilder
@@ -28,7 +31,10 @@ class MapFragment : Fragment() {
     private val mapPoints: MutableList<GeoPoint> = mutableListOf()
     private val allStations : MutableList<Station> = mutableListOf()
     private lateinit var stationService: StationService
-
+    private lateinit var currentStationId : String
+    lateinit var btnGoToHistoric: Button
+    lateinit var searchView: SearchView
+    lateinit var resultsView: LinearLayout
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,6 +47,9 @@ class MapFragment : Fragment() {
         val ctx = getActivity()?.getApplicationContext();
 
         Configuration.getInstance().load(ctx,PreferenceManager.getDefaultSharedPreferences(ctx))
+
+        btnGoToHistoric = view.findViewById(R.id.datosHistoricos)
+
 
         val map = view.findViewById<MapView>(R.id.map)
 
@@ -55,13 +64,73 @@ class MapFragment : Fragment() {
 
         getStations(map, view)
 
+        //hardocdeado para probar
+        // login("user@respirar.com", "user1234")
 
         val startPoint = GeoPoint(-34.0000000, -64.0000000)
 
         map.setClickable(true)
         map.setMultiTouchControls(true)
         mapController.setCenter(startPoint)
+
+        searchView =  view.findViewById(R.id.search)
+        resultsView = view.findViewById(R.id.idResultsView)
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                callSearch(query)
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                callSearch(newText)
+                return true
+            }
+
+            fun callSearch(query: String?) {
+                resultsView.removeAllViews()
+                if(!query.isNullOrBlank()) {
+                    val filteredStations = allStations.filter { station ->
+                        station.name.toLowerCase().contains(query!!.toLowerCase())
+                    }
+                    filteredStations.forEach { station ->
+                        val button = Button(context)
+                        button.text = station.name
+                        button.setOnClickListener {
+                            mapController.setZoom(15)
+                            mapController.setCenter( GeoPoint(station.coordinates.latitude, station.coordinates.longitude))
+                            searchView.clearFocus()
+
+                        }
+                        resultsView.addView(button)
+
+                    }
+                }
+            }
+        })
+
+        searchView.setOnCloseListener(object : SearchView.OnCloseListener {
+            override fun onClose(): Boolean {
+                resultsView.removeAllViews()
+                searchView.clearFocus()
+                return true
+            }
+        })
+
         return view
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        requireActivity().title = "Prueba"
+
+        btnGoToHistoric.setOnClickListener {
+
+            val actionToHistoric = MapFragmentDirections.actionMapFragmentToHistoricFragment3(currentStationId)
+            view?.findNavController()?.navigate(actionToHistoric)
+
+        }
     }
 
     private fun getStations(map:MapView, view: View) {
@@ -103,7 +172,6 @@ class MapFragment : Fragment() {
                 // Obtener los datos de la estación asociada al marcador
                 val station = getStationFromMarker(marker)
                 if (station != null) {
-                    // Hacer algo con los datos de la estación (por ejemplo, mostrarlos en un diálogo)
                     showDialogWithStationData(map,marker,view,station)
                 }
                 true // Devolver `true` para indicar que el evento de toque ha sido gestionado
@@ -122,6 +190,7 @@ class MapFragment : Fragment() {
     }
 
     private fun showDialogWithStationData(map:MapView, marker:Marker, view:View, station: Station) {
+       currentStationId = station.id
        val mapController = map.controller
        mapController.setCenter(marker.position)
        mapController.setZoom(15)
@@ -150,4 +219,23 @@ class MapFragment : Fragment() {
     }
 
 
+
+//    private fun login(userId: String, password: String) {
+//        val loginCredentials = LoginCredentials(userId, password)
+//        stationService.login(loginCredentials).enqueue(object :
+//            Callback<LoginResponse> {
+//            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+//                if (response.isSuccessful) {
+//                    val stations = response.body()
+//                    //guardar el token de alguna forma
+//                    Log.d("stationsHistory",stations.toString())
+//                }
+//
+//            }
+//
+//            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+//                Log.e("Example", t.stackTraceToString())
+//            }
+//        })
+//    }
 }
