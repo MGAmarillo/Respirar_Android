@@ -22,16 +22,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout);
+        /* val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout);
 
-        val buttonMenu = findViewById<ImageView>(R.id.imageMenu);
+           val buttonMenu = findViewById<ImageView>(R.id.imageMenu);
 
-        val navigationView: NavigationView = findViewById(R.id.navigationView)
-        val menu: Menu = navigationView.menu
-        val menuItem: MenuItem = menu.findItem(R.id.itemRegistro)
+         val navigationView: NavigationView = findViewById(R.id.navigationView)
+         val menu: Menu = navigationView.menu
+         val menuItem: MenuItem = menu.findItem(R.id.itemRegistro)
 
-        val spannableString = SpannableString(menuItem.title)
-        spannableString.setSpan(RelativeSizeSpan(2.5f), 0, spannableString.length, 0)
+         val spannableString = SpannableString(menuItem.title)
+         spannableString.setSpan(RelativeSizeSpan(2.5f), 0, spannableString.length, 0)
 
 
         spannableString.apply{
@@ -75,6 +75,6 @@ class MainActivity : AppCompatActivity() {
                 paint.textSkewX = -0.25f
             }
             paint.typeface = typeface
-        }
+        } */
     }
 }
