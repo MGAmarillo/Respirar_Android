@@ -25,7 +25,7 @@ Profesores: Jorge Velurtas - Martín Sarquis Rivas
 ## Setup Local
 **Requisitos**
 - Android Studio
-- JDK 17
+- SDK 8 o superior
 - Dispositivo (emulado o real) con Android 12 o superior
 
 Backend -> https://github.com/MGAmarillo/Proyecto-Respirar---Backend-
