@@ -1,6 +1,6 @@
 # Respirar - Módulo mapas - Android App Nativa
 
-Aplicación móvil android nativa para la visualización de de estaciones meteorológicas en un mapa interactivo y su respectiva información histórica dentro del ecosistema FIWARE 
+Aplicación móvil android nativa para la visualización de estaciones meteorológicas en un mapa interactivo y su respectiva información histórica dentro del ecosistema FIWARE 
 
 **Proyecto Final**.
 
